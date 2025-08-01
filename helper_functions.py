@@ -1,4 +1,5 @@
 import pickle
+import numpy as np
 
 def load_prms(type='rr'): #rr for random-robust, the description of the rist pre-set pkl file we created
     if type == 'rr':
@@ -36,3 +37,18 @@ def get_scalars(prms):
             print(f"Error reading sheet {i+1}: {e}")
 
     return sclrs
+
+def generate_T(prms):
+    T = prms["T"].reshape((prms["T"].shape[0], prms["T"].shape[1], 1)).repeat(prms['n'], axis=2)
+
+    x_check = np.sum(T, axis=0)
+    x_check = x_check.reshape(x_check.shape[0], 1, x_check.shape[1])
+
+    #We calculate what each column (axis 0) of T would need to be multiplied by to achieve min miles constraint in that demographic bucket, if necessary (i.e., if it's short)
+    multiply = ((x_check/prms['x']) ** -1)
+    multiply = np.where(multiply<1, 1, multiply)
+
+    #This line gets added retroactiely; it fixes the axes of the multiply object by mode (generic; 1) x Bucket (4) X Page/Demographic (n) just like its product, T.
+    multiply = np.swapaxes(multiply, 0, 1)
+
+    return T * multiply
