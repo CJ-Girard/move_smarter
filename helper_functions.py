@@ -10,6 +10,9 @@ def load_prms(type='rr'): #rr for random-robust, the description of the rist pre
     with open(file_path, 'rb') as file:
         prms = pickle.load(file)
 
+    #Based on new mathematical implementation, here is a better format (axis rearrangement, predominantly due to matrix broadcasting)
+    prms['x'] = np.transpose(prms['x'], (2, 1, 0))
+
     return prms
 
 def get_scalars(prms):
@@ -51,4 +54,6 @@ def generate_T(prms):
     #This line gets added retroactiely; it fixes the axes of the multiply object by mode (generic; 1) x Bucket (4) X Page/Demographic (n) just like its product, T.
     multiply = np.swapaxes(multiply, 0, 1)
 
-    return T * multiply
+    T *= multiply
+
+    return T
